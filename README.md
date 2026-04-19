@@ -76,10 +76,10 @@ The application will start at:
 
 ### Available Endpoints
 
-#### PDF Upload
-- **POST** `/pdf/upload` - Upload a PDF file
-  - Request: Form data with file (PDF only)
-  - Response: JSON with filename, file_size, file_id, and success message
+#### PDF List Files
+- **GET** `/pdf/` - Get paginated list of uploaded files
+  - Query parameters: `limit` (default: 100), `offset` (default: 0)
+  - Response: JSON with files array and pagination metadata
   - File metadata is automatically stored in the database
 
 #### Health Check
@@ -91,6 +91,41 @@ The application will start at:
   - Response: Available endpoints and descriptions
 
 ## API Usage Examples
+
+### List Files with Pagination
+
+```bash
+# Get first 100 files (default)
+curl -X GET "http://localhost:8000/pdf/"
+
+# Get 50 files
+curl -X GET "http://localhost:8000/pdf/?limit=50"
+
+# Skip first 10 files, get next 100
+curl -X GET "http://localhost:8000/pdf/?offset=10"
+
+# Get 20 files starting from the 41st file
+curl -X GET "http://localhost:8000/pdf/?limit=20&offset=40"
+```
+
+Response:
+```json
+{
+  "files": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440000",
+      "nama": "document.pdf",
+      "path": "uploads/pdf/document.pdf",
+      "size": 102400,
+      "type": "application/pdf"
+    }
+  ],
+  "count": 150,
+  "page": 1,
+  "limit": 100,
+  "offset": 0
+}
+```
 
 ### Upload a PDF File
 

@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
 import uuid
 
 
@@ -29,6 +29,34 @@ class FileResponse(FileBase):
                 "path": "uploads/pdf/document.pdf",
                 "size": 102400,
                 "type": "application/pdf"
+            }
+        }
+
+
+class FileListResponse(BaseModel):
+    """Response schema for paginated file list"""
+    files: List[FileResponse]
+    count: int
+    page: int
+    limit: int
+    offset: int
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "files": [
+                    {
+                        "id": "550e8400-e29b-41d4-a716-446655440000",
+                        "nama": "document.pdf",
+                        "path": "uploads/pdf/document.pdf",
+                        "size": 102400,
+                        "type": "application/pdf"
+                    }
+                ],
+                "count": 150,
+                "page": 1,
+                "limit": 100,
+                "offset": 0
             }
         }
 
