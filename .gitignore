@@ -43,3 +43,7 @@ chroma_db/
 
 # Upload folder
 uploads/
+
+
+# SQLite database
+*.db
