@@ -34,16 +34,19 @@ pip install -r requirements.txt
 
 ### 3. Initialize Database & Run Migrations
 
-Run Alembic migrations to set up the database schema:
+First, ensure you're in the virtual environment, then run Alembic migrations:
 
 ```bash
+source .venv/bin/activate
 alembic upgrade head
 ```
 
 This will:
 - Create the database file (`iwansusanto.db`)
 - Apply all pending migrations
-- Set up required tables
+- Create the `file` table and other required database schemas
+
+**Note**: If this is the first time setting up the project and migrations haven't been generated yet, follow the Database Migrations section below first.
 
 ## Running the Application
 
@@ -76,7 +79,8 @@ The application will start at:
 #### PDF Upload
 - **POST** `/pdf/upload` - Upload a PDF file
   - Request: Form data with file (PDF only)
-  - Response: JSON with filename, file_size, and success message
+  - Response: JSON with filename, file_size, file_id, and success message
+  - File metadata is automatically stored in the database
 
 #### Health Check
 - **GET** `/health` - API health status
@@ -100,9 +104,12 @@ Response:
 {
   "filename": "document.pdf",
   "file_size": 102400,
+  "file_id": "550e8400-e29b-41d4-a716-446655440000",
   "message": "File uploaded successfully"
 }
 ```
+
+The `file_id` is a UUID that uniquely identifies the uploaded file in the database and can be used for future references.
 
 ## Project Structure
 
@@ -111,48 +118,119 @@ assignment-vi/
 ├── app/
 │   ├── main.py              # FastAPI application entry point
 │   ├── schema/
-│   │   └── pdf.py          # Pydantic schemas for API responses
+│   │   ├── pdf.py          # PDF-related schemas
+│   │   └── file.py         # File model schemas
 │   ├── router/
 │   │   └── pdf.py          # PDF upload routes
 │   ├── utils/
 │   │   └── utils.py        # Utility functions
 │   ├── models/             # SQLModel database models
+│   │   ├── file.py         # File model with SQLite table
+│   │   └── engine.py       # Database engine and session
 │   └── core/               # Configuration and settings
 ├── alembic/                # Database migrations
 │   ├── versions/           # Migration scripts
 │   ├── env.py              # Alembic environment configuration
 │   └── alembic.ini         # Alembic configuration
 ├── uploads/                # Uploaded PDF files (auto-created)
+│   └── pdf/                # Subdirectory for PDF uploads
+├── iwansusanto.db          # SQLite database file (auto-created)
 ├── pyproject.toml          # Project dependencies
 ├── .gitignore              # Git ignore rules
+├── Makefile                # Development commands
 └── README.md               # This file
 ```
 
 ## Database Migrations
 
-### Create a New Migration
+This project uses **Alembic** for database schema management with SQLModel.
+
+### Initial Setup (First Time Only)
+
+If migrations have not been generated yet, create the initial migration:
 
 ```bash
-alembic revision --autogenerate -m "Description of changes"
+alembic revision --autogenerate -m "Initial migration"
 ```
 
-### Apply Pending Migrations
+This command:
+- Detects all SQLModel models in `app/models/`
+- Automatically generates migration script in `alembic/versions/`
+- Prepares the schema changes for application
+
+Then apply the migration:
 
 ```bash
 alembic upgrade head
 ```
 
+### Create a New Migration
+
+After modifying any model in `app/models/`, generate a new migration:
+
+```bash
+alembic revision --autogenerate -m "Description of changes"
+```
+
+Examples:
+```bash
+alembic revision --autogenerate -m "Add user authentication table"
+alembic revision --autogenerate -m "Add timestamp columns to file model"
+```
+
+### Apply Pending Migrations
+
+Apply all pending migrations to your database:
+
+```bash
+alembic upgrade head
+```
+
+### View Current Migration Status
+
+See which migrations have been applied:
+
+```bash
+alembic current
+```
+
+### View Migration History
+
+View all migrations and their status:
+
+```bash
+alembic history
+```
+
 ### Downgrade to Previous Migration
+
+Rollback to the previous migration:
 
 ```bash
 alembic downgrade -1
 ```
 
-### View Migration History
+Or rollback multiple steps:
 
 ```bash
-alembic history
+alembic downgrade -3
 ```
+
+### Downgrade to Specific Migration
+
+Rollback to a specific migration by ID:
+
+```bash
+alembic downgrade <migration_id>
+```
+
+### Migration Best Practices
+
+1. **Always review generated migrations** before applying them
+2. **Create descriptive migration messages** for clarity
+3. **Test migrations in development** before production
+4. **Commit migration files** to version control
+5. **Run `alembic upgrade head`** after pulling latest code
 
 ## Makefile Commands
 
@@ -196,6 +274,46 @@ uv sync
 ```bash
 source .venv/bin/activate
 alembic upgrade head
+```
+
+### Issue: Database tables not created after migration
+
+**Solution**: Verify migration files exist and were applied:
+```bash
+# Check migration history
+alembic history
+
+# Check current revision
+alembic current
+
+# Apply migrations
+alembic upgrade head
+```
+
+### Issue: Migration file shows empty (no changes detected)
+
+**Solution**: Ensure all models are imported in `alembic/env.py`:
+```python
+from app.models.file import File
+```
+
+Then regenerate migration:
+```bash
+alembic revision --autogenerate -m "Description"
+```
+
+### Issue: Need to rollback changes
+
+**Solution**: Use downgrade command:
+```bash
+# Rollback one migration
+alembic downgrade -1
+
+# Rollback multiple migrations
+alembic downgrade -3
+
+# Rollback to specific migration
+alembic downgrade <migration_id>
 ```
 
 ### Issue: Port 8000 already in use

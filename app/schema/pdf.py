@@ -1,17 +1,4 @@
-from pydantic import BaseModel
+# PDF-related schemas are now in file.py
+from app.schema.file import PDFUploadResponse, FileResponse, FileCreate
 
-
-class PDFUploadResponse(BaseModel):
-    """Response schema for PDF upload endpoint"""
-    filename: str
-    file_size: int
-    message: str
-
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "filename": "document.pdf",
-                "file_size": 102400,
-                "message": "File uploaded successfully"
-            }
-        }
+__all__ = ["PDFUploadResponse", "FileResponse", "FileCreate"]
