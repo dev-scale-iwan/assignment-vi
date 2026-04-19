@@ -105,6 +105,34 @@ The application will start at:
 - **API Documentation (Scalar)**: `http://localhost:8000/docs`
 - **Health Check**: `http://localhost:8000/health`
 
+## Model Context Protocol (MCP)
+
+This project integrates with the [Model Context Protocol](https://modelcontextprotocol.io/), allowing AI agents (like Claude Desktop or other MCP-compatible clients) to interact with your PDF RAG system directly.
+
+### Running the MCP Server
+
+The MCP server uses `streamable-http` transport and can be started using the following commands:
+
+Using Makefile:
+```bash
+make mcp
+```
+
+For development and debugging with the [MCP Inspector](https://github.com/modelcontextprotocol/inspector):
+```bash
+make mcp-dev
+```
+
+### Available MCP Tools
+
+AI agents can use the following tools once connected to the MCP server:
+
+- **`get_root`**: Get the root response and health status of the API.
+- **`list_files`**: List all uploaded PDF files with pagination.
+- **`get_file_detail`**: Get detailed metadata for a specific PDF using its ID.
+- **`search_pdf`**: Search for content across all uploaded PDFs using vector search.
+- **`upload_pdf`**: Upload a PDF file by providing its local file path.
+
 ### Available Endpoints
 
 #### File Status Values
@@ -335,6 +363,9 @@ The project includes a `Makefile` for common development tasks:
 
 ```bash
 make dev        # Start development server with auto-reload on port 8000
+make celery     # Start Celery worker for background PDF processing
+make mcp        # Start the MCP server
+make mcp-dev    # Start the MCP server in development mode with inspector
 ```
 
 To view all available commands:
@@ -384,6 +415,9 @@ CELERY_RESULT_BACKEND=redis://localhost:6379/0
 
 # Mistral AI API
 MISTRALAI_API_KEY=your_mistral_api_key_here
+
+# MCP Configuration
+MCP_PORT=8001
 ```
 
 ## Troubleshooting
