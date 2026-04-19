@@ -24,16 +24,26 @@ def extract_with_mistral(pdf_path: str) -> Dict[str, Any]:
     try:
         print(f"Extracting text from PDF: {pdf_path}")
 
-        # Read PDF file and encode as base64
-        with open(pdf_path, "rb") as f:
-            pdf_data = base64.b64encode(f.read()).decode('utf-8')
+        # Upload PDF to Mistral first so OCR can reference it by file_id
+        with open(pdf_path, "rb") as pdf_file:
+            upload_response = client.files.upload(
+                file={
+                    "file_name": os.path.basename(pdf_path),
+                    "content": pdf_file,
+                    "content_type": "application/pdf",
+                },
+                purpose="ocr",
+            )
 
-        # Process with Mistral OCR
+        file_id = upload_response.id
+        print(f"✓ Uploaded PDF to Mistral, file_id={file_id}")
+
+        # Process with Mistral OCR using the uploaded file reference
         ocr_response = client.ocr.process(
             model="mistral-ocr-latest",
             document={
-                "type": "document_base64",
-                "document_base64": pdf_data
+                "type": "file",
+                "file_id": file_id,
             }
         )
 

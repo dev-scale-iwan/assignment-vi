@@ -1,4 +1,5 @@
 import os
+import logging
 from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
 from sqlmodel import Session, select, func
 import uuid
@@ -9,6 +10,8 @@ from app.utils.query_params import standard_query_params
 from app.models.engine import get_db
 from app.models.file import File as FileModel
 from app.core.tasks import extract_pdf_task
+
+logger = logging.getLogger(__name__)
 
 pdf_router = APIRouter(prefix="/pdf", tags=["PDF"])
 
@@ -95,14 +98,18 @@ async def upload_pdf(
     try:
         result = process_pdf_upload(file, db, path="pdf")
         
-        # Trigger PDF extraction task asynchronously
-        extract_pdf_task.delay(result["file_id"], result["file_path"])
+        # Trigger PDF extraction task asynchronously on the pdf_extraction queue
+        task = extract_pdf_task.apply_async(
+            args=[result["file_id"], result["file_path"]],
+            queue="pdf_extraction"
+        )
+        logger.info(f"📤 Task queued - File: {result['file_id']}, Task ID: {task.id}")
         
         return PDFUploadResponse(
             filename=result["filename"],
             file_size=result["file_size"],
             file_id=result["file_id"],
-            message="File uploaded successfully. PDF extraction started in background."
+            message=f"File uploaded successfully. PDF extraction queued as task {task.id}."
         )
     except ValueError as e:
         raise HTTPException(
