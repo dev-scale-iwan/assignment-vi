@@ -1,6 +1,7 @@
 import os
 from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
 from sqlmodel import Session, select, func
+import uuid
 
 from app.schema.file import PDFUploadResponse, FileResponse, FileListResponse
 from app.utils.utils import process_pdf_upload
@@ -16,16 +17,6 @@ async def list_files(
     db: Session = Depends(get_db),
     query_params: dict = Depends(standard_query_params)
 ) -> FileListResponse:
-    """
-    Get a paginated list of all uploaded files from the database.
-    
-    Args:
-        db: Database session
-        query_params: Query parameters (limit, offset)
-        
-    Returns:
-        FileListResponse with files list and pagination metadata
-    """
     try:
         # Set default limit to 100 if not provided
         limit = query_params.get("limit") or 100
@@ -53,6 +44,31 @@ async def list_files(
         raise HTTPException(
             status_code=500,
             detail=f"Failed to retrieve files: {str(e)}"
+        )
+
+
+@pdf_router.get("/{file_id}", response_model=FileResponse)
+async def get_file_detail(
+    file_id: uuid.UUID,
+    db: Session = Depends(get_db)
+) -> FileResponse:
+    try:
+        statement = select(FileModel).where(FileModel.id == file_id)
+        file = db.exec(statement).first()
+        
+        if not file:
+            raise HTTPException(
+                status_code=404,
+                detail=f"File with ID {file_id} not found"
+            )
+        
+        return file
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to retrieve file: {str(e)}"
         )
 
 

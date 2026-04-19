@@ -80,6 +80,12 @@ The application will start at:
 - **GET** `/pdf/` - Get paginated list of uploaded files
   - Query parameters: `limit` (default: 100), `offset` (default: 0)
   - Response: JSON with files array and pagination metadata
+
+#### PDF File Detail
+- **GET** `/pdf/{file_id}` - Get detailed information for a specific file
+  - Path parameter: `file_id` (UUID)
+  - Response: JSON with file metadata
+  - Returns 404 if file not found
   - File metadata is automatically stored in the database
 
 #### Health Check
@@ -127,6 +133,30 @@ Response:
 }
 ```
 
+### Get File Details
+
+```bash
+curl -X GET "http://localhost:8000/pdf/550e8400-e29b-41d4-a716-446655440000"
+```
+
+Response:
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "nama": "document.pdf",
+  "path": "uploads/pdf/document.pdf",
+  "size": 102400,
+  "type": "application/pdf"
+}
+```
+
+Error Response (404):
+```json
+{
+  "detail": "File with ID 550e8400-e29b-41d4-a716-446655440000 not found"
+}
+```
+
 ### Upload a PDF File
 
 ```bash
@@ -137,14 +167,16 @@ curl -X POST "http://localhost:8000/pdf/upload" \
 Response:
 ```json
 {
-  "filename": "document.pdf",
+  "filename": "document-1640995200.pdf",
   "file_size": 102400,
   "file_id": "550e8400-e29b-41d4-a716-446655440000",
   "message": "File uploaded successfully"
 }
 ```
 
-The `file_id` is a UUID that uniquely identifies the uploaded file in the database and can be used for future references.
+**Note**: Files are automatically renamed to format: `lowercase-spaces-to-dashes-unix-timestamp.pdf`. For example:
+- `"My Document.pdf"` → `"my-document-1640995200.pdf"`
+- `"Report 2024.pdf"` → `"report-2024-1640995200.pdf"`
 
 ## Project Structure
 
