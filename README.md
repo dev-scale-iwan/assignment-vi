@@ -47,7 +47,15 @@ This will:
 
 ## Running the Application
 
-### Start the FastAPI Server
+### Using Makefile (Recommended)
+
+```bash
+make dev
+```
+
+This runs the development server with auto-reload enabled.
+
+### Manual Start
 
 ```bash
 uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
@@ -144,6 +152,19 @@ alembic downgrade -1
 
 ```bash
 alembic history
+```
+
+## Makefile Commands
+
+The project includes a `Makefile` for common development tasks:
+
+```bash
+make dev        # Start development server with auto-reload on port 8000
+```
+
+To view all available commands:
+```bash
+make help
 ```
 
 ## Environment Variables
