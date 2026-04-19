@@ -55,7 +55,23 @@ This will:
 
 **Note**: If this is the first time setting up the project and migrations haven't been generated yet, follow the Database Migrations section below first.
 
+### 3. Start Redis
+
+Ensure Redis is installed and running before starting Celery:
+
+```bash
+redis-server
+```
+
 ### 4. Start Celery Worker (for PDF Processing)
+
+Using Makefile:
+
+```bash
+make celery
+```
+
+Or manually:
 
 ```bash
 celery -A app.core.celery_app worker --loglevel=info --queues=pdf_extraction
