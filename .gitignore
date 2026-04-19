@@ -47,3 +47,6 @@ uploads/
 
 # SQLite database
 *.db
+
+# chroma_db/
+chroma_db/

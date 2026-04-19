@@ -7,3 +7,4 @@ class File(SQLModel, table=True):
     path: str = Field(default=None)
     size: float = Field(default=None)
     type: str = Field(default=None)
+    status: str = Field(default=None)

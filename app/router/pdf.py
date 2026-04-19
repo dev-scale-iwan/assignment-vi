@@ -8,6 +8,7 @@ from app.utils.utils import process_pdf_upload
 from app.utils.query_params import standard_query_params
 from app.models.engine import get_db
 from app.models.file import File as FileModel
+from app.core.tasks import extract_pdf_task
 
 pdf_router = APIRouter(prefix="/pdf", tags=["PDF"])
 
@@ -77,13 +78,31 @@ async def upload_pdf(
     file: UploadFile = File(...),
     db: Session = Depends(get_db)
 ) -> PDFUploadResponse:
+    """
+    Upload a PDF file and store it in the uploads folder and database.
+    Triggers PDF text extraction as a background task.
+    
+    Args:
+        file: PDF file to upload
+        db: Database session
+        
+    Returns:
+        PDFUploadResponse with filename, file_size, file_id and success message
+        
+    Raises:
+        HTTPException: If file validation or upload fails
+    """
     try:
         result = process_pdf_upload(file, db, path="pdf")
+        
+        # Trigger PDF extraction task asynchronously
+        extract_pdf_task.delay(result["file_id"], result["file_path"])
+        
         return PDFUploadResponse(
             filename=result["filename"],
             file_size=result["file_size"],
             file_id=result["file_id"],
-            message="File uploaded successfully"
+            message="File uploaded successfully. PDF extraction started in background."
         )
     except ValueError as e:
         raise HTTPException(

@@ -32,6 +32,13 @@ Or using `pip`:
 pip install -r requirements.txt
 ```
 
+**New Dependencies Added:**
+- `celery` - Background task processing
+- `redis` - Message broker for Celery
+- `mistralai` - OCR API client
+- `chonkie` - Semantic text chunking
+- `chromadb` - Vector database for RAG
+
 ### 3. Initialize Database & Run Migrations
 
 First, ensure you're in the virtual environment, then run Alembic migrations:
@@ -47,6 +54,14 @@ This will:
 - Create the `file` table and other required database schemas
 
 **Note**: If this is the first time setting up the project and migrations haven't been generated yet, follow the Database Migrations section below first.
+
+### 4. Start Celery Worker (for PDF Processing)
+
+```bash
+celery -A app.core.celery_app worker --loglevel=info --queues=pdf_extraction
+```
+
+This starts the background worker that processes PDF extraction tasks asynchronously.
 
 ## Running the Application
 
@@ -76,17 +91,16 @@ The application will start at:
 
 ### Available Endpoints
 
-#### PDF List Files
-- **GET** `/pdf/` - Get paginated list of uploaded files
-  - Query parameters: `limit` (default: 100), `offset` (default: 0)
-  - Response: JSON with files array and pagination metadata
+#### File Status Values
 
-#### PDF File Detail
-- **GET** `/pdf/{file_id}` - Get detailed information for a specific file
-  - Path parameter: `file_id` (UUID)
-  - Response: JSON with file metadata
-  - Returns 404 if file not found
-  - File metadata is automatically stored in the database
+The `status` field in the file table tracks the PDF processing state:
+
+- `uploaded` - File uploaded successfully, waiting for processing
+- `processing` - PDF text extraction in progress
+- `completed` - PDF extraction and storage completed successfully
+- `extraction_failed` - PDF text extraction failed (OCR error)
+- `storage_failed` - Text extraction succeeded but ChromaDB storage failed
+- `error` - General processing error
 
 #### Health Check
 - **GET** `/health` - API health status
@@ -170,7 +184,7 @@ Response:
   "filename": "document-1640995200.pdf",
   "file_size": 102400,
   "file_id": "550e8400-e29b-41d4-a716-446655440000",
-  "message": "File uploaded successfully"
+  "message": "File uploaded successfully. PDF extraction started in background."
 }
 ```
 
@@ -312,17 +326,48 @@ To view all available commands:
 make help
 ```
 
-## Environment Variables
+### PDF Processing Pipeline
 
-Create a `.env` file in the root directory (see `.env-example` for reference):
+When you upload a PDF:
+
+1. **File Upload**: PDF saved to disk, metadata stored in database with status "uploaded"
+2. **Background Task**: Celery worker processes PDF with Mistral OCR API
+3. **Text Extraction**: Full text extracted from all pages with page-level metadata
+4. **Semantic Chunking**: Content split into meaningful chunks using Chonkie
+5. **Vector Storage**: Both chunks and individual pages stored in ChromaDB collections:
+   - `pdf_chunks` - Semantically chunked text for RAG retrieval
+   - `pdf_pages` - Individual page content for page-specific queries
+6. **Status Update**: File status updated to "completed" or appropriate error status
+
+### Data Structure
+
+The extraction process returns structured data including:
+
+- **Full content**: Complete extracted text
+- **Pages array**: Individual page information with:
+  - `page_number`: 1-based page numbering
+  - `id`: Unique page identifier
+  - `content`: Page markdown content
+  - `document`: Source PDF path
+- **Chunks array**: Semantically chunked text pieces
+- **Metadata**: Page count, chunk count, processing status
+
+### Requirements
+
+- **Redis** (for Celery broker): Install Redis and ensure it's running
+- **Celery Worker**: Must be running to process PDF extraction tasks
+
+### Environment Variables
+
+Add to your `.env` file:
 
 ```bash
-# Database
-DATABASE_URL=sqlite:///iwansusanto.db
+# Celery Configuration
+CELERY_BROKER_URL=redis://localhost:6379/0
+CELERY_RESULT_BACKEND=redis://localhost:6379/0
 
-# API Configuration
-API_TITLE=Assignment VI - RAG System
-API_VERSION=0.1.0
+# Mistral AI API
+MISTRALAI_API_KEY=your_mistral_api_key_here
 ```
 
 ## Troubleshooting

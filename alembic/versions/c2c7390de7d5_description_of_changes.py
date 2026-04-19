@@ -1,8 +1,8 @@
-"""Initial migration create file table
+"""Description of changes
 
-Revision ID: 6a2307322335
+Revision ID: c2c7390de7d5
 Revises: 
-Create Date: 2026-04-19 17:59:55.043473
+Create Date: 2026-04-19 19:28:50.250416
 
 """
 from typing import Sequence, Union
@@ -13,7 +13,7 @@ import sqlmodel
 
 
 # revision identifiers, used by Alembic.
-revision: str = '6a2307322335'
+revision: str = 'c2c7390de7d5'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -27,6 +27,7 @@ def upgrade() -> None:
     sa.Column('path', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('size', sa.Float(), nullable=False),
     sa.Column('type', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+    sa.Column('status', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
     # ### end Alembic commands ###

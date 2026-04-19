@@ -63,7 +63,8 @@ def process_pdf_upload(file: UploadFile, db: Session, path: str = "pdf") -> dict
             nama=new_filename,  # Store the new filename
             path=file_path,
             size=file_size,
-            type="application/pdf"
+            type="application/pdf",
+            status="uploaded"  # Set initial status
         )
         db.add(file_record)
         db.commit()
@@ -72,7 +73,8 @@ def process_pdf_upload(file: UploadFile, db: Session, path: str = "pdf") -> dict
         return {
             "filename": new_filename,  # Return the new filename
             "file_size": file_size,
-            "file_id": str(file_record.id)
+            "file_id": str(file_record.id),
+            "file_path": file_path  # Add file path for Celery task
         }
     except Exception as e:
         db.rollback()
