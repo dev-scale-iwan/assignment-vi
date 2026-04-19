@@ -7,6 +7,8 @@ from chonkie import SemanticChunker
 from dotenv import load_dotenv
 from mistralai.client import Mistral
 
+import uuid
+
 from app.models.engine import engine
 from app.models.file import File as FileModel
 from sqlmodel import Session, select
@@ -148,9 +150,12 @@ def store_extracted_content(file_id: str, extracted_data: Dict[str, Any]) -> boo
 
 def update_file_status(file_id: str, status: str, extracted_data: Dict[str, Any] = None) -> bool:
     try:
+        # Ensure the UUID value is properly typed for SQLModel
+        file_uuid = uuid.UUID(file_id) if isinstance(file_id, str) else file_id
+
         with Session(engine) as session:
             # Get file record
-            statement = select(FileModel).where(FileModel.id == file_id)
+            statement = select(FileModel).where(FileModel.id == file_uuid)
             file_record = session.exec(statement).first()
 
             if not file_record:
