@@ -65,7 +65,7 @@ def extract_with_mistral(pdf_path: str) -> Dict[str, Any]:
 
         # Perform recursive chunking
         print("Chunking text with Chonkie RecursiveChunker...")
-        chunker = RecursiveChunker(chunk_size=30)
+        chunker = RecursiveChunker(chunk_size=100)
         chunks = chunker.chunk(full_content)
         print(f"✓ Created {len(chunks)} chunks")
 
