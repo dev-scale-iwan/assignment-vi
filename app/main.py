@@ -1,4 +1,5 @@
 from app.router.pdf import pdf_router
+from app.router.search import search_router
 from fastapi import FastAPI
 from app.core.setting import settings
 from scalar_fastapi import get_scalar_api_reference
@@ -9,6 +10,7 @@ app = FastAPI(
 )
 
 app.include_router(pdf_router)
+app.include_router(search_router)
 
 @app.get("/")
 def root():
