@@ -3,7 +3,7 @@ import base64
 from typing import Dict, Any
 
 import chromadb
-from chonkie import SemanticChunker
+from chonkie import RecursiveChunker
 from dotenv import load_dotenv
 from mistralai.client import Mistral
 
@@ -63,9 +63,9 @@ def extract_with_mistral(pdf_path: str) -> Dict[str, Any]:
 
         print(f"✓ Extracted {len(full_content)} characters from PDF")
 
-        # Perform semantic chunking
-        print("Chunking text with Chonkie SemanticChunker...")
-        chunker = SemanticChunker(chunk_size=512, threshold=0.5)
+        # Perform recursive chunking
+        print("Chunking text with Chonkie RecursiveChunker...")
+        chunker = RecursiveChunker(chunk_size=30)
         chunks = chunker.chunk(full_content)
         print(f"✓ Created {len(chunks)} chunks")
 

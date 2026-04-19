@@ -9,6 +9,7 @@ class FileBase(BaseModel):
     path: str
     size: float
     type: str
+    status: str
 
 
 class FileCreate(FileBase):
