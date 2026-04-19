@@ -81,20 +81,6 @@ async def upload_pdf(
     file: UploadFile = File(...),
     db: Session = Depends(get_db)
 ) -> PDFUploadResponse:
-    """
-    Upload a PDF file and store it in the uploads folder and database.
-    Triggers PDF text extraction as a background task.
-    
-    Args:
-        file: PDF file to upload
-        db: Database session
-        
-    Returns:
-        PDFUploadResponse with filename, file_size, file_id and success message
-        
-    Raises:
-        HTTPException: If file validation or upload fails
-    """
     try:
         result = process_pdf_upload(file, db, path="pdf")
         

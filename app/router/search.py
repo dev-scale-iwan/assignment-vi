@@ -8,7 +8,6 @@ search_router = APIRouter(prefix="/search", tags=["Search"])
 
 @search_router.get("/{q}")
 async def search_pdf_content(q: str, n_results: int = 3) -> Any:
-    """Search stored PDF content in ChromaDB by query text."""
     try:
         chroma_client = chromadb.PersistentClient(path="./chroma_db")
         collection = chroma_client.get_or_create_collection(name="pdf_chunks")
